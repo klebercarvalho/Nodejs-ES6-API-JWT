@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 
 const User = require('../models/users');
 
@@ -33,7 +34,8 @@ module.exports = {
       }
     });
   },
-  login: (req, res) => {
+
+login: (req, res) => {
     const { name, password } = req.body;
 
     mongoose.connect(connUri, { useNewUrlParser: true }, (err) => {
@@ -42,15 +44,24 @@ module.exports = {
       if(!err) {
         User.findOne({name}, (err, user) => {
           if (!err && user) {
-            // We could compare passwords in our model instead of below
+            // We could compare passwords in our model instead of below as well
             bcrypt.compare(password, user.password).then(match => {
               if (match) {
+                status = 200;
+                // Create a token
+                const payload = { user: user.name };
+                const options = { expiresIn: '2d', issuer: 'https://scotch.io' };
+                const secret = process.env.JWT_SECRET;
+                const token = jwt.sign(payload, secret, options);
+
+                // console.log('TOKEN', token);
+                result.token = token;
                 result.status = status;
                 result.result = user;
               } else {
                 status = 401;
                 result.status = status;
-                result.error = 'Authentication error';
+                result.error = `Authentication error`;
               }
               res.status(status).send(result);
             }).catch(err => {
@@ -73,5 +84,18 @@ module.exports = {
         res.status(status).send(result);
       }
     });
+  },
+
+  getAll: (req, res) => {
+    mongoose.connect(connUri, { useNewUrlParser: true }, (err) => {
+      User.find({}, (err, users) => {
+        if (!err) {
+          res.send(users);
+        } else {
+          console.log('Error', err);
+        }
+      });
+    });
   }
+
 }
