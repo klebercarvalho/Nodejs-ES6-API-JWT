@@ -1,0 +1,6 @@
+curl --request POST \
+  --url http://localhost:3000/api/v1/users \
+  --header 'cache-control: no-cache' \
+  --header 'content-type: application/x-www-form-urlencoded' \
+  --header 'postman-token: 5cd825d2-5e14-7078-7518-99f7ff94d162' \
+  --data 'name=kleber&password=password'
